@@ -23,14 +23,14 @@ def fetch_success(**kwargs):
 @task.branch
 def check_status_code(**kwargs):
     ti = kwargs['ti']
-    data = ti.xcom_pull(task_ids='fetch_tiki_categories', key='return_value')
+    data = ti.xcom_pull(task_ids='fetch_categories', key='return_value')
     if data['status_code']!=200:
         return 'exception_api'
     
     return 'success_api'
 
-@task(task_id="fetch_tiki_categories")
-def fetch_tiki_categories():
+@task(task_id="fetch_categories")
+def fetch_categories():
     
     session=requests.session()
     res=session.get(tiki_crawler_variable['category']['url'],
@@ -43,7 +43,7 @@ def fetch_tiki_categories():
         "status_code":res.status_code,
     }
 
-def fetch_tiki_product(category_id,category_name):
+def fetch_product(category_id,category_name):
     producer=KafkaProducerHook(kafka_config_id="kafka").get_producer()
     session=requests.session()
     for page in range(10):
@@ -59,13 +59,13 @@ def fetch_tiki_product(category_id,category_name):
                 producer.flush()
             
 @task_group
-def fetch_product():
+def fetch_products():
     with open('categories.pickle', 'rb') as handle:
         data = pickle.load(handle)
 
     task_list=[]
     
-    for category in data[:1]:
+    for category in data:
         link=category['link']
         url_parser=link.split("/")
         category_id=url_parser[-1][1:]
@@ -73,22 +73,21 @@ def fetch_product():
         task_name=f"fetching_by_{category_name.replace(" ","_")}"
         op = PythonOperator(
                 task_id=task_name,
-                python_callable=fetch_tiki_product,
+                python_callable=fetch_product,
                 op_kwargs={'category_id': category_id,'category_name':category_name}
             )
         task_list.append(op)
 
     task_list
 
-@dag(schedule_interval='0 */1 * * *', start_date=datetime(2024, 1, 1), catchup=False)
-def crawl_product_by_category(**kwargs):
+@dag(dag_id="Crawl-Tiki-Product-By-Categories",schedule_interval='0 */1 * * *', start_date=datetime(2024, 1, 1), catchup=False)
+def crawl_product_by_category():
     
     is_success=check_status_code()
-    fetch_tiki_categories() >>is_success
+    fetch_categories() >>is_success
 
     is_success>>Label('No')>>handle_exception_api()
-    is_success>>Label('Yes')>>fetch_success() >>fetch_product()
+    is_success>>Label('Yes')>>fetch_success() >>fetch_products()
 
 
 crawl_product_by_category()
-
