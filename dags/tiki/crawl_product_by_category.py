@@ -2,15 +2,25 @@ from airflow.decorators import dag, task,task_group
 from datetime import datetime
 import requests
 import json
+import uuid
 from airflow.models import Variable
 from airflow.operators.python import PythonOperator
 from airflow.utils.edgemodifier import Label
 import logging
-import pickle
 from airflow.providers.apache.kafka.hooks.produce import KafkaProducerHook
+from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+import pytz
 
+tz=pytz.timezone("Asia/Ho_Chi_Minh")
 logging.basicConfig(format="{asctime} - {levelname} - {message}",style="{",datefmt="%Y-%m-%d %H:%M")
-tiki_crawler_variable=Variable.get('tiki_crawler_variable',deserialize_json=True)
+job_variable=Variable.get('tiki-product-crawl-by-categories',deserialize_json=True)
+api_config=job_variable['api']
+s3_config=job_variable['s3']
+s3_hook=S3Hook(aws_conn_id="levietnam-aws")
+producer=KafkaProducerHook(kafka_config_id="levietnam-kafka").get_producer()
+today = datetime.today()
+date_string=today.strftime('%Y/%m/%d')
+category_prefix=f"{s3_config['prefix']}/{date_string}/"
 
 @task(task_id='exception_api')
 def handle_exception_api():
@@ -31,24 +41,28 @@ def check_status_code(**kwargs):
 
 @task(task_id="fetch_categories")
 def fetch_categories():
-    
     session=requests.session()
-    res=session.get(tiki_crawler_variable['category']['url'],
-                    headers=tiki_crawler_variable['category']['headers'])
-    if res.status_code==200:
-        with open('categories.pickle', 'wb') as handle:
-            pickle.dump(res.json()['menu_block']['items'], handle, protocol=pickle.HIGHEST_PROTOCOL)
+    res=session.get(api_config['category']['url'],
+                    headers=api_config['category']['headers'])
     
+    obj_name=str(uuid.uuid4())+".json"
+    if res.status_code==200:
+        s3_hook.load_string(
+            string_data=json.dumps(res.json()['menu_block']['items']),
+            bucket_name=s3_config['bucket'],
+            key=f"{category_prefix}{obj_name}",
+            replace=True 
+        )
+
     return {
         "status_code":res.status_code,
     }
 
 def fetch_product(category_id,category_name):
-    producer=KafkaProducerHook(kafka_config_id="kafka").get_producer()
     session=requests.session()
     for page in range(10):
-        res=session.get(f"{tiki_crawler_variable['product']['url']}?limit=40&page={str(page)}&urlKey={category_name}&category={category_id}",
-                    headers=tiki_crawler_variable['product']['headers'])
+        res=session.get(f"{api_config['product']['url']}?limit=40&page={str(page)}&urlKey={category_name}&category={category_id}",
+                    headers=api_config['product']['headers'])
         
         if res.status_code==200:
             data=res.json()['data']
@@ -60,12 +74,15 @@ def fetch_product(category_id,category_name):
             
 @task_group
 def fetch_products():
-    with open('categories.pickle', 'rb') as handle:
-        data = pickle.load(handle)
+
+    list_obj=s3_hook.get_file_metadata(prefix=f"{category_prefix}",bucket_name=s3_config['bucket'])
+    latest_key = sorted(list_obj, key=lambda x: x['LastModified'],reverse=True)[0]
+
+    obj=s3_hook.get_key(bucket_name=s3_config['bucket'],key=latest_key['Key']).get()
+    data=json.loads(obj['Body'].read().decode('utf-8'))
 
     task_list=[]
-    
-    for category in data:
+    for category in data[:1]:
         link=category['link']
         url_parser=link.split("/")
         category_id=url_parser[-1][1:]
