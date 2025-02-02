@@ -61,6 +61,12 @@ with DAG(
         bash_command='sleep 5',
         retries=3,
     )
+    t5 = BashOperator(
+        task_id='sleep',
+        depends_on_past=False,
+        bash_command='sleep 5',
+        retries=3,
+    )
     # [END basic_task]
 
     # [START documentation]
@@ -100,5 +106,5 @@ with DAG(
     )
     # [END jinja_template]
 
-    t1 >> [t2, t3]
+    t1 >> [t2, t3,t5]
 # [END tutorial]
