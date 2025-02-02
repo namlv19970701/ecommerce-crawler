@@ -62,7 +62,7 @@ with DAG(
         retries=3,
     )
     t5 = BashOperator(
-        task_id='sleep',
+        task_id='sleep_2',
         depends_on_past=False,
         bash_command='sleep 5',
         retries=3,
