@@ -3,6 +3,7 @@ import subprocess
 from airflow.models import Variable
 from utils import request_proxy
 import pendulum
+from airflow.decorators import task
 
 tiki_category_curl = Variable.get("tiki_category_curl")
 
