@@ -11,7 +11,7 @@ with DAG(
     max_active_runs=1,
     start_date=pendulum.datetime(2023, 5, 8, tz="Asia/Ho_Chi_Minh"),
     catchup=False,
-    tags=["crawl"],
+    tags=["crawler",'tiki'],
     default_args={"owner": "levietnam"},
 ) as dag:
 
