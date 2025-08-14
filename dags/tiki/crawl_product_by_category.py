@@ -2,6 +2,7 @@ from airflow import DAG
 import subprocess
 from airflow.models import Variable
 from utils import request_proxy
+import pendulum
 
 tiki_category_curl = Variable.get("tiki_category_curl")
 
