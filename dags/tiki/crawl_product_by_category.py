@@ -20,7 +20,7 @@ with DAG(
     @task 
     def get_category():
         proxy=request_proxy()
-        curl_command = f"{curl_command} --proxy {proxy}"
+        curl_command = f"{tiki_category_curl} --proxy {proxy}"
         print(curl_command)
         result=subprocess.run(curl_command,shell=True,text=True,capture_output=True)
         print(result)
