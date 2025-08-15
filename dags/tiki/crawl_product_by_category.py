@@ -11,7 +11,7 @@ tiki_product_by_category_curl = Variable.get("tiki_product_by_category_curl")
 
 with DAG(
     dag_id="crawl_tiki_products",
-    schedule="*/10 * * * *",
+    schedule="*/30 * * * *",
     max_active_runs=1,
     start_date=pendulum.datetime(2023, 5, 8, tz="Asia/Ho_Chi_Minh"),
     catchup=False,
