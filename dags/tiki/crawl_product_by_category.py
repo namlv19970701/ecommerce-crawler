@@ -42,7 +42,7 @@ with DAG(
         print(url_key,category_id)
         
         product_curl=tiki_product_by_category_curl
-        for page in range(2):
+        for page in range(1,2):
             values={
                 "$url_key":url_key,
                 "$category_id":category_id,
@@ -51,11 +51,11 @@ with DAG(
             for k,v in values.items():
                 product_curl=product_curl.replace(k,str(v))
 
-        curl_command = product_curl.replace('curl',f'curl --proxy {proxy}')
-        result=subprocess.run(product_curl,shell=True,text=True,capture_output=True)
-        response=json.loads(result.stdout)
+            curl_command = product_curl.replace('curl',f'curl --proxy {proxy}')
+            result=subprocess.run(product_curl,shell=True,text=True,capture_output=True)
+            response=json.loads(result.stdout)
 
-        return response.get('data',[])
+            return response.get('data',[])
 
     
         
