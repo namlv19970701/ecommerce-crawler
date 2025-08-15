@@ -77,7 +77,6 @@ with DAG(
                 )
                 total_items+=1
             producer.flush()
-            break
 
         return total_items
 
