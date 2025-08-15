@@ -44,7 +44,7 @@ with DAG(
         print(url_key,category_id)
 
         producer = KafkaProducerHook(
-            kafka_config_id=kafka_connection,  # Make sure you configure the Kafka connection in Airflow
+            kafka_config_id="kafka",  # Make sure you configure the Kafka connection in Airflow
         ).get_producer()
 
         total_items=0
