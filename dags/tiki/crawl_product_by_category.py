@@ -7,6 +7,7 @@ from airflow.decorators import task
 import json
 
 tiki_category_curl = Variable.get("tiki_category_curl")
+tiki_product_by_category_curl = Variable.get("tiki_product_by_category_curl")
 
 with DAG(
     dag_id="crawl_tiki_products",
@@ -33,10 +34,28 @@ with DAG(
 
     @task
     def get_products(category):
+        proxy=request_proxy()
+        
         link=category['link']
         url_key=link.split("/")[-2]
         category_id=link.split("/")[-1][1:]
         print(url_key,category_id)
+        
+        product_curl=tiki_product_by_category_curl
+        for page in range(10):
+            values={
+                "$url_key":url_key,
+                "$category_id":category_id,
+                "$page":page
+            }
+            for k,v in values.items():
+                product_curl=product_curl.replace(k,str(v))
+
+        curl_command = product_curl.replace('curl',f'curl --proxy {proxy}')
+        result=subprocess.run(product_curl,shell=True,text=True,capture_output=True)
+        response=json.loads(result.stdout)
+
+        return response.get(data,[])
 
     
         
