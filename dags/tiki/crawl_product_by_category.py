@@ -42,7 +42,7 @@ with DAG(
         print(url_key,category_id)
         
         product_curl=tiki_product_by_category_curl
-        for page in range(10):
+        for page in range(2):
             values={
                 "$url_key":url_key,
                 "$category_id":category_id,
