@@ -52,7 +52,8 @@ with DAG(
                 product_curl=product_curl.replace(k,str(v))
 
             curl_command = product_curl.replace('curl',f'curl --proxy {proxy}')
-            result=subprocess.run(product_curl,shell=True,text=True,capture_output=True)
+            curl_command=curl_command.split("\\")
+            result=subprocess.run(curl_command,shell=True,text=True,capture_output=True)
             response=json.loads(result.stdout)
 
             return response.get('data',[])
