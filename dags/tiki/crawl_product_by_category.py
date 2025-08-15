@@ -26,7 +26,18 @@ with DAG(
         result=subprocess.run(curl_command,shell=True,text=True,capture_output=True)
         print(result.stdout)
         print(result.stderr)
-        return result.stdout
+        category= result.stdout.get("menu_block",{}).get("items",[])
+        return category
 
-    get_category()
+    @task
+    def get_products(category):
+        link=category['link']
+        url_key=link.split("/")[-2]
+        category_id=link.split("/")[-1][1:]
+        print(url_key,category_id)
 
+    
+        
+
+    categories=get_category()
+    products=get_products.expand(category=categories)
