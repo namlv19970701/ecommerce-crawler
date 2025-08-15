@@ -21,6 +21,7 @@ with DAG(
     def get_category():
         proxy=request_proxy()
         curl_command = tiki_category_curl.replace('curl',f'curl --proxy {proxy}')
+        curl_command=currl_command.split("\\")
         print(curl_command)
         result=subprocess.run(curl_command,shell=True,text=True,capture_output=True)
         print(result.stdout)
