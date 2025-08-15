@@ -4,6 +4,7 @@ from airflow.models import Variable
 from utils import request_proxy
 import pendulum
 from airflow.decorators import task
+import json
 
 tiki_category_curl = Variable.get("tiki_category_curl")
 
@@ -26,7 +27,8 @@ with DAG(
         result=subprocess.run(curl_command,shell=True,text=True,capture_output=True)
         print(result.stdout)
         print(result.stderr)
-        category= result.stdout.get("menu_block",{}).get("items",[])
+        response=json.loads(result.stdout)
+        category= response.get("menu_block",{}).get("items",[])
         return category
 
     @task
