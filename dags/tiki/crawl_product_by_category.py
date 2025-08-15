@@ -55,7 +55,7 @@ with DAG(
         result=subprocess.run(product_curl,shell=True,text=True,capture_output=True)
         response=json.loads(result.stdout)
 
-        return response.get(data,[])
+        return response.get('data',[])
 
     
         
