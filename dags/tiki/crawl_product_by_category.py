@@ -77,7 +77,7 @@ with DAG(
                 
             client.load_string(
                 string_data=json.dumps(data),
-                key=f"raw/tiki/{today}/{crawled_at}.json",  # đường dẫn trong bucket
+                key=f"raw/tiki/{today}/{url_key}/{crawled_at}.json",  # đường dẫn trong bucket
                 bucket_name="test",    # tên bucket
                 replace=True                # ghi đè nếu tồn tại
             )
