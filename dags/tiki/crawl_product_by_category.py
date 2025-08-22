@@ -71,7 +71,6 @@ with DAG(
             if len(data_res)==0:
                 break
             data={'data':data_res}
-            if 
             data.update({
                 "crawled_at":int(datetime.now().timestamp()*1000),
                 "category_id":category_id,
