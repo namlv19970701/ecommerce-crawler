@@ -50,7 +50,7 @@ with DAG(
         client = S3Hook(aws_conn_id='s3')
         total_items=0
         product_curl=tiki_product_by_category_curl
-        for page in range(1,2):
+        for page in range(1,100):
             values={
                 "$url_key":url_key,
                 "$category_id":category_id,
@@ -66,9 +66,12 @@ with DAG(
             now=datetime.now()
             today=now.strftime("%Y/%m/%d")
             crawled_at=int(now.timestamp()*1000)
-            
-            data={'data':response.get('data',[])}
-            
+
+            data_res=response.get('data',[])
+            if len(data_res)==0:
+                break
+            data={'data':data_res}
+            if 
             data.update({
                 "crawled_at":int(datetime.now().timestamp()*1000),
                 "category_id":category_id,
