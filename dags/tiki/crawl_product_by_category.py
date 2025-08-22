@@ -14,7 +14,7 @@ tiki_product_by_category_curl = Variable.get("tiki_product_by_category_curl")
 
 with DAG(
     dag_id="crawl_tiki_products",
-    schedule="*/30 * * * *",
+    schedule="*/60 * * * *",
     max_active_runs=1,
     start_date=pendulum.datetime(2023, 5, 8, tz="Asia/Ho_Chi_Minh"),
     catchup=False,
@@ -63,7 +63,9 @@ with DAG(
             curl_command=curl_command.split("\\")
             result=subprocess.run(curl_command,shell=True,text=True,capture_output=True)
             response=json.loads(result.stdout)
-            crawled_at=int(datetime.now().timestamp()*1000)
+            now=datetime.now()
+            today=now.strftime("%Y/%m/%d")
+            crawled_at=int(now.timestamp()*1000)
             
             data={'data':response.get('data',[])}
             
@@ -75,7 +77,7 @@ with DAG(
                 
             client.load_string(
                 string_data=json.dumps(data),
-                key=f"raw/tiki/{crawled_at}.json",  # đường dẫn trong bucket
+                key=f"raw/tiki/{today}/{crawled_at}.json",  # đường dẫn trong bucket
                 bucket_name="test",    # tên bucket
                 replace=True                # ghi đè nếu tồn tại
             )
