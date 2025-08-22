@@ -47,7 +47,7 @@ with DAG(
         # producer = KafkaProducerHook(
         #     kafka_config_id="kafka",  # Make sure you configure the Kafka connection in Airflow
         # ).get_producer()
-        client = S3Hook(aws_conn_id=s3_connection)
+        client = S3Hook(aws_conn_id='s3')
         total_items=0
         product_curl=tiki_product_by_category_curl
         for page in range(1,2):
